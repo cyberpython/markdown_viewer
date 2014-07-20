@@ -69,6 +69,7 @@ import urllib.request
 import os
 import tempfile
 import zipfile
+import subprocess
 
 UI_INFO = """
 <ui>
@@ -242,6 +243,8 @@ class MarkdownViewer():
         settings.set_property('enable-default-context-menu', False)
         self.webView.set_settings(settings)
         
+        self.webView.connect('navigation-requested', self.on_nav_req)
+        
         
         self.window.add(vbox)
         self.window.connect("delete-event", Gtk.main_quit)
@@ -250,7 +253,19 @@ class MarkdownViewer():
         
         self.findbar.set_visible(False)
         
-
+    def on_nav_req(self, view, frame, request):
+        if request != None:
+            current_file_uri = "file://"+urllib.request.pathname2url(self.last_loaded_file)
+            uri = request.get_uri()
+            if uri.startswith(current_file_uri):
+                 return WebKit.NavigationResponse.ACCEPT
+            else:
+                self.load_uri_in_system_browser(uri)
+                return WebKit.NavigationResponse.IGNORE
+        
+    def load_uri_in_system_browser(self, uri):
+        subprocess.Popen("xdg-open "+uri, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
+    
     def on_findbar_close(self, widget):
         self.findbar.set_visible(False)
 
@@ -352,8 +367,8 @@ class MarkdownViewer():
         text = input_file.read()
         html = HTML_PRE + self.get_css_includes(file_path) + HTML_STYLE + self.get_js_includes(file_path) + HTML_MID + markdown.markdown(text, output_format="html5", extensions=['headerid','codehilite(css_class=code,guess_lang=True)', 'extra']) + HTML_POST
         #print(html)
-        self.webView.load_html_string(html, "file://"+urllib.request.pathname2url(file_path))
         self.last_loaded_file = file_path
+        self.webView.load_html_string(html, "file://"+urllib.request.pathname2url(file_path))
         self.window.set_title(os.path.basename(file_path))
         self.action_reload.set_sensitive(True)
         self.action_toggle_toc.set_sensitive(True)
