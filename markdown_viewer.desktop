@@ -1,0 +1,7 @@
+[Desktop Entry]
+Comment=View Markdown Documents
+Terminal=false
+Name=Markdown Viewer
+Exec=markdown_viewer
+Type=Application
+Icon=markdown_viewer
