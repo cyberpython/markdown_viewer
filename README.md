@@ -1,7 +1,7 @@
 Description
 -----------
 
-Simple python3 + GTK3 based Markdown viewer.
+Simple python + GTK3 based Markdown viewer.
 
 The application can also open 'Compressed Markdown Files', which are regular ZIP 
 archives with the extension '.mdz' that contain a markdown file in their root
@@ -33,7 +33,7 @@ Highlighted code by the codehilite extension is assigned the '.code' CCS class.
 Requirements
 ------------
 
-* Python 3.x
+* Python 2.7+ (not Python 3+)
 * GTK 3.x
 * PyGI
 * python-markdown

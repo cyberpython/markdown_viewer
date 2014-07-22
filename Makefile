@@ -39,12 +39,12 @@ install:
 	mkdir -p $(DESTDIR)/usr/share/markdown_viewer
 	mkdir -p $(DESTDIR)/usr/share/icons/hicolor/scalable/apps
 	mkdir -p $(DESTDIR)/usr/share/applications
-	cp css/style.css $(DESTDIR)/usr/share/markdown_viewer/style.css
-	cp css/toc.css $(DESTDIR)/usr/share/markdown_viewer/toc.css
-	cp js/jquery.js $(DESTDIR)/usr/share/markdown_viewer/jquery.js
-	cp js/toc.js $(DESTDIR)/usr/share/markdown_viewer/toc.js
-	cp js/markdown_viewer.js $(DESTDIR)/usr/share/markdown_viewer/markdown_viewer.js
-	cp markdown_viewer $(DESTDIR)/usr/bin/markdown_viewer
+	cp res/style.css $(DESTDIR)/usr/share/markdown_viewer/style.css
+	cp res/toc.css $(DESTDIR)/usr/share/markdown_viewer/toc.css
+	cp res/jquery.js $(DESTDIR)/usr/share/markdown_viewer/jquery.js
+	cp res/toc.js $(DESTDIR)/usr/share/markdown_viewer/toc.js
+	cp res/markdown_viewer.js $(DESTDIR)/usr/share/markdown_viewer/markdown_viewer.js
+	cp markdown_viewer.py $(DESTDIR)/usr/bin/markdown_viewer
 	cp markdown_viewer.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/markdown_viewer.svg
 	cp markdown_viewer.desktop $(DESTDIR)/usr/share/applications/markdown_viewer.desktop
 	chmod ugo+x $(DESTDIR)/usr/bin/markdown_viewer

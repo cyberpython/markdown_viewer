@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 '''
 The MIT License (MIT)
@@ -37,7 +37,7 @@ references (each placed in the correct relative path).
 
 The generated HTML document will try to load the following CSS files:
 
-- file:///usr/share/markdown_viewer/style.css
+- file:///usr/share/markdown_viewer/style.css (on Linux) or file://<script_dir>/css/style.css (on Windows)
 
 
 - all '.css' files in the same directory with the Markdown file except 'style.css' 
@@ -65,11 +65,23 @@ from gi.repository import GLib
 from gi.repository import WebKit
 import codecs
 import markdown
-import urllib.request
+import urllib
 import os
+import sys
 import tempfile
 import zipfile
 import subprocess
+import platform
+
+PLATFORM = platform.system().lower()
+
+RESOURCE_PATH_BASE_URL = "/usr/share/markdown_viewer"
+FILE_PROTO = "file://"
+
+
+if PLATFORM == "windows":
+    FILE_PROTO = "file:"
+    RESOURCE_PATH_BASE_URL = urllib.pathname2url(os.path.join(sys.prefix, "res"))
 
 UI_INFO = """
 <ui>
@@ -102,17 +114,17 @@ HTML_PRE = """<!DOCTYPE html>
   <head>
     <meta charset="utf-8" />
     <title>Untitled</title>
-    <link rel="stylesheet" type="text/css" href="file:///usr/share/markdown_viewer/style.css" />
-    <link rel="stylesheet" type="text/css" href="file:///usr/share/markdown_viewer/toc.css" />
+    <link rel="stylesheet" type="text/css" href='"""+FILE_PROTO+RESOURCE_PATH_BASE_URL+"""/style.css' />
+    <link rel="stylesheet" type="text/css" href='"""+FILE_PROTO+RESOURCE_PATH_BASE_URL+"""/toc.css' />
 """
 
 HTML_STYLE = """
     <link rel="stylesheet" type="text/css" href="style.css" />
     
     
-    <script src='file:///usr/share/markdown_viewer/jquery.js'></script>
-    <script src='file:///usr/share/markdown_viewer/toc.js'></script>
-    <script src='file:///usr/share/markdown_viewer/markdown_viewer.js'></script>
+    <script src='"""+FILE_PROTO+RESOURCE_PATH_BASE_URL+"""/jquery.js'></script>
+    <script src='"""+FILE_PROTO+RESOURCE_PATH_BASE_URL+"""/toc.js'></script>
+    <script src='"""+FILE_PROTO+RESOURCE_PATH_BASE_URL+"""/markdown_viewer.js'></script>
     
 """
 
@@ -255,7 +267,7 @@ class MarkdownViewer():
         
     def on_nav_req(self, view, frame, request):
         if request != None:
-            current_file_uri = "file://"+urllib.request.pathname2url(self.last_loaded_file)
+            current_file_uri = FILE_PROTO+urllib.pathname2url(self.last_loaded_file).replace("%7E", "~")
             uri = request.get_uri()
             if uri.startswith(current_file_uri):
                  return WebKit.NavigationResponse.ACCEPT
@@ -264,7 +276,10 @@ class MarkdownViewer():
                 return WebKit.NavigationResponse.IGNORE
         
     def load_uri_in_system_browser(self, uri):
-        subprocess.Popen("xdg-open "+uri, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
+        if PLATFORM == "windows":
+           os.system("start "+uri) 
+        else:
+            subprocess.Popen("xdg-open "+uri, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
     
     def on_findbar_close(self, widget):
         self.findbar.set_visible(False)
@@ -339,11 +354,18 @@ class MarkdownViewer():
                 self.load_file(fpath)
             
 
+    def rmdir(self):
+		print "rm_tmp_dir"
+		if self.doc_dir != None:
+			try:
+				shutil.rmtree(self.doc_dir)  # delete directory
+			except OSError as exc:
+				pass
+	
     def load_zipped(self, file_path):
-        if self.doc_dir != None:
-            self.doc_dir.cleanup()
-        self.doc_dir = tempfile.TemporaryDirectory()
-        dest_dir = self.doc_dir.name
+        self.rmdir()
+        self.doc_dir = tempfile.mkdtemp()
+        dest_dir = self.doc_dir
         fname =  os.path.splitext(os.path.basename(file_path))[0]
         zf = zipfile.ZipFile(file_path)
         zf.extractall(path=dest_dir)
@@ -352,6 +374,7 @@ class MarkdownViewer():
     def add_filters(self, dialog):
         filter_markdown = Gtk.FileFilter()
         filter_markdown.set_name("Markdown files")
+        filter_markdown.add_pattern("*.md")
         filter_markdown.add_mime_type("text/x-markdown")
         dialog.add_filter(filter_markdown)
         
@@ -366,9 +389,11 @@ class MarkdownViewer():
         input_file = codecs.open(file_path, mode="r", encoding="utf-8")
         text = input_file.read()
         html = HTML_PRE + self.get_css_includes(file_path) + HTML_STYLE + self.get_js_includes(file_path) + HTML_MID + markdown.markdown(text, output_format="html5", extensions=['headerid','codehilite(css_class=code,guess_lang=True)', 'extra']) + HTML_POST
-        #print(html)
+        f = open("test.html", "w")
+        f.write(html)
+        f.close()
         self.last_loaded_file = file_path
-        self.webView.load_html_string(html, "file://"+urllib.request.pathname2url(file_path))
+        self.webView.load_html_string(html, FILE_PROTO+urllib.pathname2url(file_path).replace("%7E", "~"))
         self.window.set_title(os.path.basename(file_path))
         self.action_reload.set_sensitive(True)
         self.action_toggle_toc.set_sensitive(True)
@@ -389,3 +414,5 @@ class MarkdownViewer():
 
 viewer = MarkdownViewer()
 viewer.run()
+#viewer.rm_tmp_dir()
+
