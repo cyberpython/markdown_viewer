@@ -29,6 +29,7 @@ Highlighted code by the codehilite extension is assigned the '.code' CCS class.
 * python-markdown is used for parsing.
 * WebKit 3 is used for rendering.
 * jQuery and TOC.js are used to display the table of contents.
+* The application's icon is a derivative of the devhelp icon from the [Gnome-icons project](https://github.com/gnome-design-team/gnome-icons) available under the Creative Commons Attribution-Share Alike 3.0 license.
 
 Requirements
 ------------
